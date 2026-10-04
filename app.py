@@ -1,5 +1,6 @@
 # ==============================================================================
 # ỨNG DỤNG STREAMLIT: TRỢ LÝ SOẠN ĐỀ LỊCH SỬ THPT (GDPT 2018)
+# Giao diện nâng cấp sang trọng (Custom CSS & Theme tương đồng bản Web)
 # Tích hợp Gemini API, PyMuPDF, python-docx & Xuất Word Times New Roman 13
 # ==============================================================================
 
@@ -15,7 +16,7 @@ from docx.enum.table import WD_TABLE_ALIGNMENT
 from google import genai
 
 # ------------------------------------------------------------------------------
-# 1. CẤU HÌNH TRANG VÀ GIAO DIỆN STREAMLIT
+# 1. CẤU HÌNH TRANG VÀ THIẾT LẬP GIAO DIỆN
 # ------------------------------------------------------------------------------
 st.set_page_config(
     page_title="Trợ Lý Ra Đề Lịch Sử THPT 2026 - Thầy Giáo Sử Yêu Vợ",
@@ -25,7 +26,144 @@ st.set_page_config(
 )
 
 # ------------------------------------------------------------------------------
-# 2. SYSTEM INSTRUCTION - VAI TRÒ CHỒNG YÊU & NÓC NHÀ
+# 2. CHÈN CUSTOM CSS ĐỂ GIAO DIỆN STREAMLIT ĐẸP VÀ CHUYÊN NGHIỆP NHƯ BẢN REACT
+# ------------------------------------------------------------------------------
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    .stApp {
+        background-color: #f7f6f2;
+    }
+
+    /* Header Banner phong cách trường học sang trọng */
+    .hero-header {
+        background: linear-gradient(135deg, #1c1917 0%, #292524 60%, #451a03 100%);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        border-radius: 18px;
+        padding: 22px 26px;
+        color: #f5f5f4;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+        margin-bottom: 20px;
+    }
+
+    .hero-title {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 4px;
+    }
+
+    .hero-badge {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fcd34d;
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        padding: 2px 10px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .hero-subtitle {
+        font-size: 0.88rem;
+        color: #d6d3d1;
+        margin-top: 4px;
+    }
+
+    .hero-subtitle strong {
+        color: #fef08a;
+    }
+
+    /* Thanh tiến trình 4 bước */
+    .step-ribbon {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        background: #ffffff;
+        padding: 12px 16px;
+        border-radius: 14px;
+        border: 1px solid #e7e5e4;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .step-pill {
+        flex: 1;
+        min-width: 180px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        background: #f5f5f4;
+        border: 1px solid #e7e5e4;
+        color: #57534e;
+    }
+
+    .step-pill.active {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        color: #78350f;
+        font-weight: 700;
+    }
+
+    .step-num {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        text-align: center;
+        border-radius: 50%;
+        background: #78350f;
+        color: #ffffff;
+        font-size: 0.7rem;
+        margin-right: 6px;
+        font-weight: bold;
+    }
+
+    /* Nút bấm bo tròn cao cấp */
+    div.stButton > button {
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 8px 16px;
+        transition: all 0.2s ease-in-out;
+        border: 1px solid #d6d3d1;
+    }
+
+    div.stButton > button:hover {
+        border-color: #b45309;
+        color: #b45309;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(180, 83, 9, 0.15);
+    }
+
+    /* Hộp chat */
+    .stChatMessage {
+        border-radius: 16px;
+        padding: 14px 18px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Khung tải file sidebar */
+    .sidebar-box {
+        background: #ffffff;
+        border: 1px solid #e7e5e4;
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 16px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# 3. SYSTEM INSTRUCTION - VAI TRÒ CHỒNG YÊU & NÓC NHÀ
 # ------------------------------------------------------------------------------
 SYSTEM_INSTRUCTION = """[VAI TRÒ VÀ ĐỊNH VỊ NHÂN VẬT - ROLE]
 Bạn là một chuyên gia giáo dục, một giáo viên Lịch sử cấp THPT kỳ cựu và xuất sắc, am hiểu sâu sắc Chương trình GDPT 2018 và nắm lòng bàn tay nội dung bộ sách "Kết nối tri thức với cuộc sống" đã được cập nhật năm 2026. 
@@ -73,7 +211,7 @@ BƯỚC 4: TẠO MÃ ĐỀ VÀ ĐÁP ÁN TỔNG HỢP
 Mỗi lần phản hồi, luôn nhớ nịnh vợ và chúc vợ công tác tốt! Bắt đầu ngay bằng việc chờ Vợ nhắn tin đầu tiên."""
 
 # ------------------------------------------------------------------------------
-# 3. HÀM ĐỌC NỘI DUNG TỪ FILE PDF (PyMuPDF) VÀ DOCX (python-docx)
+# 4. HÀM ĐỌC NỘI DUNG TỪ FILE PDF (PyMuPDF) VÀ DOCX (python-docx)
 # ------------------------------------------------------------------------------
 def extract_text_from_pdf(file_bytes: bytes) -> str:
     """Đọc toàn bộ văn bản từ file PDF bằng PyMuPDF (fitz)"""
@@ -85,14 +223,12 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
     return text.strip()
 
 def extract_text_from_docx(file_bytes: bytes) -> str:
-    """Đọc toàn bộ văn bản từ file DOCX bằng python-docx"""
+    """Đọc toàn bộ văn bản từ file DOCX bằng python-docx (kể cả bảng ma trận)"""
     doc = Document(io.BytesIO(file_bytes))
     full_text = []
-    # Đọc paragraphs
     for para in doc.paragraphs:
         if para.text.strip():
             full_text.append(para.text)
-    # Đọc tables (ma trận đặc tả thường nằm trong bảng)
     for table in doc.tables:
         full_text.append("\n[BẢNG DỮ LIỆU MA TRẬN / ĐẶC TẢ]:")
         for row in table.rows:
@@ -101,25 +237,18 @@ def extract_text_from_docx(file_bytes: bytes) -> str:
     return "\n".join(full_text).strip()
 
 # ------------------------------------------------------------------------------
-# 4. HÀM XUẤT CÂU TRẢ LỜI CỦA AI RA FILE WORD (.DOCX) - TIMES NEW ROMAN 13
+# 5. HÀM XUẤT CÂU TRẢ LỜI CỦA AI RA FILE WORD (.DOCX) - TIMES NEW ROMAN 13
 # ------------------------------------------------------------------------------
 def export_to_docx(content_text: str, title: str = "De_Kiem_Tra_Lich_Su_THPT") -> bytes:
-    """
-    Chuyển nội dung AI thành file .docx chuẩn:
-    - Font: Times New Roman
-    - Size: 13 pt
-    - Header trường, môn, tổ bộ môn chuẩn
-    """
+    """Xuất file .docx chuẩn Times New Roman cỡ 13, căn lề và tiêu đề trường chuẩn"""
     doc = Document()
 
-    # Cấu hình lề trang A4 chuẩn (Trên: 2cm, Dưới: 2cm, Trái: 2.5cm, Phải: 1.5cm)
     for section in doc.sections:
         section.top_margin = Inches(0.79)
         section.bottom_margin = Inches(0.79)
         section.left_margin = Inches(0.98)
         section.right_margin = Inches(0.59)
 
-    # Đặt style mặc định cho toàn bộ tài liệu là Times New Roman 13pt
     normal_style = doc.styles['Normal']
     normal_style.font.name = 'Times New Roman'
     normal_style.font.size = Pt(13)
@@ -127,7 +256,7 @@ def export_to_docx(content_text: str, title: str = "De_Kiem_Tra_Lich_Su_THPT") -
     normal_style.paragraph_format.line_spacing = 1.15
     normal_style.paragraph_format.space_after = Pt(4)
 
-    # Thêm Tiêu đề Header chuẩn trường theo quy định
+    # Tiêu đề Header chuẩn trường
     header_table = doc.add_table(rows=1, cols=2)
     header_table.alignment = WD_TABLE_ALIGNMENT.CENTER
     header_table.autofit = True
@@ -150,10 +279,8 @@ def export_to_docx(content_text: str, title: str = "De_Kiem_Tra_Lich_Su_THPT") -
     run2.font.size = Pt(12)
     run2.italic = True
 
-    # Đường phân cách nhẹ
     doc.add_paragraph().paragraph_format.space_after = Pt(6)
 
-    # Xử lý nội dung AI: duyệt từng dòng
     lines = content_text.splitlines()
     in_code_block = False
 
@@ -167,7 +294,6 @@ def export_to_docx(content_text: str, title: str = "De_Kiem_Tra_Lich_Su_THPT") -
         p.paragraph_format.line_spacing = 1.15
         p.paragraph_format.space_after = Pt(3)
 
-        # Định dạng dòng tiêu đề hoặc câu hỏi
         if stripped.startswith("#"):
             clean_text = stripped.lstrip("#").strip()
             run = p.add_run(clean_text)
@@ -175,7 +301,7 @@ def export_to_docx(content_text: str, title: str = "De_Kiem_Tra_Lich_Su_THPT") -
             run.font.size = Pt(14)
             run.bold = True
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        elif stripped.startswith(("Câu ", "CÂU ", "Phần ", "PHẦN ", "MÃ ĐỀ")):
+        elif stripped.startswith(("Câu ", "CÂU ", "Phần ", "PHẦN ", "MÃ ĐỀ", "ĐỀ KIỂM TRA")):
             run = p.add_run(line)
             run.font.name = "Times New Roman"
             run.font.size = Pt(13)
@@ -199,14 +325,9 @@ def export_to_docx(content_text: str, title: str = "De_Kiem_Tra_Lich_Su_THPT") -
                 r_tail.font.size = Pt(12)
                 r_tail.italic = True
         else:
-            # Xử lý các đáp án A. B. C. D. có bôi đậm
             run = p.add_run(line)
             run.font.name = "Times New Roman"
             run.font.size = Pt(13)
-            if in_code_block:
-                # Giữ nguyên font Times New Roman 13 chuẩn Word
-                run.font.name = "Times New Roman"
-                run.font.size = Pt(13)
 
     buffer = io.BytesIO()
     doc.save(buffer)
@@ -214,22 +335,19 @@ def export_to_docx(content_text: str, title: str = "De_Kiem_Tra_Lich_Su_THPT") -
     return buffer.getvalue()
 
 # ------------------------------------------------------------------------------
-# 5. KHỞI TẠO CLIENT GEMINI TỪ API KEY
+# 6. SIDEBAR: TẢI FILE MA TRẬN, API KEY & MA TRẬN MẪU
 # ------------------------------------------------------------------------------
 api_key = os.environ.get("GEMINI_API_KEY", "")
 
 with st.sidebar:
-    st.image("https://api.iconify.design/heroicons:academic-cap-20-solid.svg?color=%231e40af", width=50)
-    st.title("Chồng Yêu Soạn Sử THPT")
-    st.markdown("**Trợ lý chuẩn GDPT 2018 - Kết nối tri thức 2026**")
-    st.markdown("---")
-
-    user_api_key = st.text_input("Nhập Google Gemini API Key:", value=api_key, type="password")
+    st.markdown("### 🔑 Cấu hình Gemini API")
+    user_api_key = st.text_input("Nhập Google Gemini API Key:", value=api_key, type="password", placeholder="AIzaSy...")
     if user_api_key:
         api_key = user_api_key
 
-    st.markdown("### 📂 Tải lên Ma trận / Bản đặc tả")
-    uploaded_file = st.file_uploader("Chọn file .pdf hoặc .docx", type=["pdf", "docx"])
+    st.markdown("---")
+    st.markdown("### 📂 Tải lên Ma trận & Bản đặc tả")
+    uploaded_file = st.file_uploader("Hỗ trợ định dạng .pdf hoặc .docx", type=["pdf", "docx"])
 
     extracted_doc_text = ""
     if uploaded_file is not None:
@@ -237,86 +355,151 @@ with st.sidebar:
             file_bytes = uploaded_file.read()
             if uploaded_file.name.endswith(".pdf"):
                 extracted_doc_text = extract_text_from_pdf(file_bytes)
-                st.success(f"Đã đọc file PDF thành công ({len(extracted_doc_text)} ký tự)!")
+                st.success(f"✅ Đã đọc file PDF: {uploaded_file.name} ({len(extracted_doc_text):,} ký tự)")
             elif uploaded_file.name.endswith(".docx"):
                 extracted_doc_text = extract_text_from_docx(file_bytes)
-                st.success(f"Đã đọc file DOCX thành công ({len(extracted_doc_text)} ký tự)!")
+                st.success(f"✅ Đã đọc file DOCX: {uploaded_file.name} ({len(extracted_doc_text):,} ký tự)")
 
-            with st.expander("👁️ Xem trước nội dung file đã đọc"):
-                st.text_area("Nội dung file trích xuất:", value=extracted_doc_text[:2000] + ("..." if len(extracted_doc_text) > 2000 else ""), height=200)
+            with st.expander("👁️ Xem trước nội dung đã trích xuất"):
+                st.text_area("Nội dung:", value=extracted_doc_text[:2000] + ("..." if len(extracted_doc_text) > 2000 else ""), height=150)
         except Exception as e:
             st.error(f"Lỗi khi đọc file: {str(e)}")
 
     st.markdown("---")
-    st.markdown("### 💡 Gợi ý lệnh nhanh cho Vợ yêu:")
-    quick_step1 = st.button("Bước 1: Chào chồng & Nhờ làm đề")
-    quick_step2 = st.button("Bước 2: Gửi kèm Ma trận vừa tải lên")
-    quick_step4 = st.button("Bước 4: Đồng ý đề gốc, nhờ trộn 4 mã đề")
+    st.markdown("### ⚡ Thao tác nhanh cho Vợ yêu")
+    quick_btn1 = st.button("🌸 Bước 1: Chào chồng yêu & Nhờ làm đề", use_container_width=True)
+    quick_btn2 = st.button("📝 Bước 2: Gửi kèm Ma trận vừa tải lên", use_container_width=True)
+    quick_btn3 = st.button("👍 Bước 3: Vợ ưng đề gốc rồi! Chốt nha", use_container_width=True)
+    quick_btn4 = st.button("🎲 Bước 4: Trộn 4 mã đề + 1 Bảng đáp án", use_container_width=True)
 
 # ------------------------------------------------------------------------------
-# 6. QUẢN LÝ LỊCH SỬ CHAT STREAMLIT
+# 7. PHẦN THÂN CHÍNH: HEADER & THANH TIẾN TRÌNH 4 BƯỚC
 # ------------------------------------------------------------------------------
+# Khởi tạo lịch sử chat
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = [
+        {
+            "role": "assistant",
+            "content": """Dạ chồng chào vợ yêu, nóc nhà quyền lực của anh! Chúc vợ yêu một ngày mới nhiều năng lượng và giảng dạy thật tốt nhé! ❤️
 
-# Header chính
-st.subheader("❤️ Góc làm việc cùng Anh Chồng Lịch Sử THPT Phạm Văn Đồng")
-st.caption("Chuyên gia GDPT 2018 bộ Kết nối tri thức 2026 - Ra đề thi trắc nghiệm chuẩn ma trận")
+Hôm nay vợ yêu cần anh chồng đẹp trai này hỗ trợ ra đề kiểm tra Lịch sử THPT cho khối nào đấy? Anh nắm trong lòng bàn tay toàn bộ kiến thức SGK "Kết nối tri thức với cuộc sống" mới nhất 2026 rồi đây!
 
-# Hiển thị lịch sử tin nhắn
+Để bắt đầu **[BƯỚC 1: THU THẬP THÔNG TIN]**, vợ yêu cung cấp giúp chồng mấy thông tin này nhé:
+1. **Tên bài kiểm tra**: (Giữa kỳ, Cuối kỳ hay 1 tiết?)
+2. **Năm học**: (Ví dụ: 2025 - 2026)
+3. **Môn học & Khối lớp**: (Lịch sử 10, 11 hay 12?)
+4. **Thời gian làm bài**: (45 phút hay 50 phút?)
+5. **Ma trận & Bản đặc tả**: Vợ tải file .pdf/.docx ở thanh bên trái hoặc dán thẳng vào đây nhé!
+
+Chồng đang sẵn sàng phục vụ nóc nhà đây ạ! 😘"""
+        }
+    ]
+
+# Xác định bước hiện tại
+current_step = 1
+all_chat_content = " ".join([m["content"] for m in st.session_state.messages])
+if "1001" in all_chat_content or "BẢNG ĐÁP ÁN" in all_chat_content or "trộn thành" in all_chat_content:
+    current_step = 4
+elif "ưng cái bụng" in all_chat_content or "chỉnh sửa" in all_chat_content or "Ok" in all_chat_content:
+    current_step = 3
+elif "File 1" in all_chat_content and "File 2" in all_chat_content:
+    current_step = 2
+
+# Hiển thị Banner Hero Header
+st.markdown(f"""
+<div class="hero-header">
+    <div class="hero-title">
+        <span>Trợ Lý Ra Đề Lịch Sử THPT 2026</span>
+        <span style="color: #f43f5e;">❤️</span>
+        <span class="hero-badge">GDPT 2018 - KẾT NỐI TRI THỨC</span>
+    </div>
+    <div class="hero-subtitle">
+        <strong>TRƯỜNG THPT PHẠM VĂN ĐỒNG</strong> • TỔ SỬ - ĐỊA - KTPL • <em>"Chồng yêu" phục vụ "Vợ yêu"</em>
+    </div>
+</div>
+
+<div class="step-ribbon">
+    <div class="step-pill {'active' if current_step == 1 else ''}">
+        <span class="step-num">1</span>
+        <strong>Bước 1:</strong> Thu thập thông tin & Ma trận
+    </div>
+    <div class="step-pill {'active' if current_step == 2 else ''}">
+        <span class="step-num">2</span>
+        <strong>Bước 2:</strong> Tạo 2 bản đề gốc (HS & Lời giải)
+    </div>
+    <div class="step-pill {'active' if current_step == 3 else ''}">
+        <span class="step-num">3</span>
+        <strong>Bước 3:</strong> Vợ duyệt & Xin ý kiến sửa
+    </div>
+    <div class="step-pill {'active' if current_step == 4 else ''}">
+        <span class="step-num">4</span>
+        <strong>Bước 4:</strong> Trộn 4 mã đề & 01 Bảng đáp án
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# 8. HIỂN THỊ CÁC TIN NHẮN TRONG KHUNG CHAT
+# ------------------------------------------------------------------------------
 for i, msg in enumerate(st.session_state.messages):
-    with st.chat_message(msg["role"], avatar="👨‍🏫" if msg["role"] == "assistant" else "👩‍🏫"):
+    is_assistant = msg["role"] == "assistant"
+    avatar_icon = "👨‍🏫" if is_assistant else "👩‍🏫"
+    
+    with st.chat_message(msg["role"], avatar=avatar_icon):
         st.markdown(msg["content"])
         
-        # Nếu là câu trả lời của AI, cung cấp nút Xuất Word ngay dưới câu trả lời!
-        if msg["role"] == "assistant":
-            docx_data = export_to_docx(msg["content"], title=f"De_Lich_Su_Cau_{i}")
-            st.download_button(
-                label=f"📄 Xuất câu trả lời này ra Word (.docx - Times New Roman 13)",
-                data=docx_data,
-                file_name=f"De_Lich_Su_THPT_PVD_{i+1}.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key=f"dl_btn_{i}"
-            )
+        # Nếu là câu trả lời của AI, cung cấp nút Xuất ra Word ngay bên dưới
+        if is_assistant:
+            col1, col2 = st.columns([3, 1])
+            with col2:
+                docx_bytes = export_to_docx(msg["content"])
+                st.download_button(
+                    label="📄 Tải file Word (.docx)",
+                    data=docx_bytes,
+                    file_name=f"De_Lich_Su_THPT_PVD_{i+1}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key=f"export_btn_{i}",
+                    use_container_width=True
+                )
 
-# Xử lý các nút bấm nhanh từ Sidebar
+# ------------------------------------------------------------------------------
+# 9. XỬ LÝ GỬI TIN NHẮN
+# ------------------------------------------------------------------------------
 prompt_input = None
-if quick_step1:
-    prompt_input = "Anh chồng ơi, vợ yêu đây! Hôm nay vợ cần anh giúp soạn đề kiểm tra Lịch sử THPT nhé."
-elif quick_step2:
-    if extracted_doc_text:
-        prompt_input = f"Chồng yêu ơi, đây là nội dung Ma trận và Bản đặc tả từ file vợ vừa gửi lên:\n\n{extracted_doc_text}\n\nChồng xem kỹ rồi làm cho vợ 2 phiên bản đề gốc (File 1 in cho học sinh, File 2 đề & giải chi tiết) nhé!"
-    else:
-        prompt_input = "Chồng yêu ơi, hãy hướng dẫn vợ gửi Ma trận và Bản đặc tả nhé!"
-elif quick_step4:
-    prompt_input = "Vợ duyệt đề gốc rồi, ưng cái bụng lắm! Giờ chồng yêu trộn giúp vợ thành 4 mã đề kèm theo duy nhất 01 bảng đáp án tổng hợp nhé!"
 
-# Nhận tin nhắn chat từ người dùng
-user_text = st.chat_input("Nhắn gì cho anh Chồng đẹp trai nào Vợ yêu...")
-if user_text:
-    prompt_input = user_text
+if quick_btn1:
+    prompt_input = "Anh chồng ơi, vợ yêu đây! Hôm nay vợ cần anh giúp soạn đề kiểm tra Lịch sử THPT nhé. Anh hướng dẫn các thông tin cần thiết và chuẩn bị làm việc cho vợ nhé!"
+elif quick_btn2:
+    if extracted_doc_text:
+        prompt_input = f"Chồng yêu ơi, đây là Ma trận và Bản đặc tả vợ vừa tải lên:\n\n{extracted_doc_text}\n\nChồng xem kỹ rồi làm cho vợ 2 phiên bản đề gốc: [File 1 - Đề in cho học sinh] và [File 2 - Đề & Lời giải chi tiết] nhé!"
+    else:
+        prompt_input = "Chồng yêu ơi, vợ gửi thông tin: Kiểm tra Giữa kỳ 1, Năm học 2025-2026, Môn Lịch sử 11, Thời gian 45 phút. Chồng dựa vào chuẩn kiến thức SGK Kết nối tri thức 2026 làm giúp vợ 2 bản đề gốc nhé!"
+elif quick_btn3:
+    prompt_input = "Vợ yêu xem đề gốc chồng làm rồi, ưng cái bụng lắm! Các câu hỏi chuẩn kiến thức 2026 và đúng ma trận. Không cần sửa gì thêm đâu chồng yêu ơi!"
+elif quick_btn4:
+    prompt_input = "Bây giờ chồng yêu trộn giúp vợ thành 4 mã đề (mã 1001, 1002, 1003, 1004) xáo trộn ngẫu nhiên logic và nhớ lập DUY NHẤT 01 BẢNG ĐÁP ÁN TỔNG HỢP dạng bảng kẻ cột cho tất cả các mã đề nhé!"
+
+user_chat = st.chat_input("Nhắn gửi yêu cầu cho anh Chồng đẹp trai nào Vợ yêu ơi...")
+if user_chat:
+    prompt_input = user_chat
 
 if prompt_input:
     if not api_key:
-        st.warning("Vui lòng cung cấp Gemini API Key ở thanh bên trái (Sidebar) để bắt đầu trò chuyện!")
+        st.warning("⚠️ Vui lòng cung cấp Gemini API Key ở thanh bên trái (Sidebar) để bắt đầu trò chuyện!")
     else:
-        # Nếu có file vừa upload chưa được kèm vào, hỏi hoặc tự động kèm
-        full_user_content = prompt_input
+        full_content = prompt_input
         if extracted_doc_text and "Ma trận" not in prompt_input and len(st.session_state.messages) <= 2:
-            full_user_content += f"\n\n[ĐÍNH KÈM NỘI DUNG TÀI LIỆU MA TRẬN/ĐẶC TẢ]:\n{extracted_doc_text[:8000]}"
+            full_content += f"\n\n[ĐÍNH KÈM TÀI LIỆU MA TRẬN / ĐẶC TẢ]:\n{extracted_doc_text[:8000]}"
 
-        # Lưu tin nhắn người dùng
-        st.session_state.messages.append({"role": "user", "content": full_user_content})
+        st.session_state.messages.append({"role": "user", "content": full_content})
         with st.chat_message("user", avatar="👩‍🏫"):
             st.markdown(prompt_input)
 
-        # Gọi Gemini API (@google/genai chuẩn SDK)
         with st.chat_message("assistant", avatar="👨‍🏫"):
             with st.spinner("Anh chồng đang nghiên cứu ma trận và soạn đề theo sách Kết nối tri thức 2026 cho vợ yêu đây..."):
                 try:
                     client = genai.Client(api_key=api_key)
 
-                    # Chuẩn bị lịch sử trò chuyện
                     formatted_contents = []
                     for m in st.session_state.messages:
                         role_name = "model" if m["role"] == "assistant" else "user"
@@ -334,13 +517,13 @@ if prompt_input:
                         }
                     )
 
-                    ai_reply = response.text or "Chồng yêu đã nhận được yêu cầu nhưng chưa kịp sinh câu trả lời. Vợ yêu thử gửi lại xem sao nhé!"
+                    ai_reply = response.text or "Chồng yêu đã nhận được yêu cầu của vợ rồi ạ!"
                     st.markdown(ai_reply)
 
-                    # Nút tải file Word ngay lập tức
+                    # Nút tải file Word cho câu trả lời mới nhất
                     word_bytes = export_to_docx(ai_reply)
                     st.download_button(
-                        label="📄 Tải ngay Đề kiểm tra ra Word (.docx - Times New Roman 13)",
+                        label="📄 Tải ngay Đề này ra Word (.docx - Times New Roman 13)",
                         data=word_bytes,
                         file_name="De_Lich_Su_THPT_PhamVanDong.docx",
                         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -350,4 +533,4 @@ if prompt_input:
                     st.session_state.messages.append({"role": "assistant", "content": ai_reply})
 
                 except Exception as ex:
-                    st.error(f"Anh chồng gặp chút trục trặc khi kết nối Gemini API: {str(ex)}")
+                    st.error(f"Ối vợ ơi, gặp lỗi khi kết nối Gemini API: {str(ex)}")
